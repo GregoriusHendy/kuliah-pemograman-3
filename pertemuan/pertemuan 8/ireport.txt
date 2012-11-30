@@ -1,0 +1,21 @@
+* title - 1 kali pada awal
+* summary - 1 kali pada akhir
+
+1. title
+2. page header
+   3. group header
+     4. colum header
+	5. detail
+     6. colum footer
+  7. group footer
+8. page ooter
+9.summary
+
+dynamic data
+1. paramter
+	- dihitung dan diproses pd aplikasi
+	- jasper hanya menampilkan
+2. variabel
+	-100% dalam reposrt
+3. field
+	-data dalam detail

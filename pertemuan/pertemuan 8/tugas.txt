@@ -1,0 +1,21 @@
+buat program
+persyaratan :
+1. tabel database minimal 3.
+2. harus ada relasi
+3. 	-user interface
+	-akses database
+4. harus ada 
+	-insert
+	-delete
+	-update
+	-select
+5. validasi UI
+
+Deliverable
+1. Source code
+2. UI mockup (rancangan tampilan) tanggal 30. + schedule
+3. user manual
+	- cara instalasi
+	- cara pakasi semua fitur
+
+

@@ -1,0 +1,7 @@
+1. buat tabel model
+2. masukkan data kedalam JTabel
+3 menambahkan event
+
+event :
+rowclicked - > listSelectionListener
+cellChange -> tableModelListener
