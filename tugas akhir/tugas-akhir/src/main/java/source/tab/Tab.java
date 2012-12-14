@@ -3,7 +3,9 @@ package source.tab;
 import javax.swing.*;
 import java.awt.*;
 import source.produk.TabelProduk;
+import source.produk.input.MainInput;
 import source.suplier.TabelSuplier;
+import source.suplier.input.InputSuplier;
 
 public class Tab{
 	private JFrame fr;
@@ -26,11 +28,21 @@ public class Tab{
 		JPanel tabP = new JPanel();
 		JPanel isiP = new JPanel();
 		JPanel inputP = new JPanel();
-		
+ 
+		//isi table produk
 		TabelProduk tabelP = new TabelProduk();
-		isiP.add(tabelP.getPanel());
+		TabelProduk obTP = tabelP.getObject();
 		
+		//input produk
+		MainInput mi = new MainInput(obTP);
+		
+		//memasukkan isi tabel dan input kedalam panel
+		isiP.add(tabelP.getPanel());
+		inputP.add(mi.getPanel());
+		
+		//memasukkan panel kedalam tab produk
 		tabP.add(isiP);
+		tabP.add(inputP);
 		tabMenu.addTab("produk",tabP);
 		
 		//untuk tab suplier
@@ -38,13 +50,20 @@ public class Tab{
 		JPanel isiS = new JPanel();
 		JPanel inputS = new JPanel();
 		
+		//isi table suplier
 		TabelSuplier tabelS = new TabelSuplier();
 		isiS.add(tabelS.getPanel());
+		TabelSuplier obTS= tabelS.getObject();
+		
+		//input suplier
+		InputSuplier is = new InputSuplier(obTS);
+		inputS.add(is.getPanel());
 		
 		tabS.add(isiS);
+		tabS.add(inputS);
 		tabMenu.addTab("suplier",tabS);
 		
-		fr.setSize(800,600);
+		fr.setSize(1000,600);
 		//fr.setResizable(false);
 		fr.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		fr.setLocationRelativeTo(null);

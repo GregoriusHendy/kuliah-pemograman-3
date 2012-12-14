@@ -1,7 +1,6 @@
-package source.produk.input;
+package source.produk.input.baru;
 
 import source.produk.TabelProduk;
-//import source.produk.Produk;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,17 +14,16 @@ public class InputProduk{
 	private final JComboBox cbJenis,cbSuplier;
 	private JButton bTambah;
 	
-	public InputProduk(final TabelProduk ob){
+	public InputProduk(final TabelProduk tp){
 		panelTambah = new JPanel();
-		tfNamaProduk = new  JTextField(20);
-		tfStok = new  JTextField(20);
-		tfHarga = new  JTextField(20);
-		
-		bTambah = new JButton("tambah produk");
+		tfNamaProduk= new  JTextField(20);
+		tfStok      = new  JTextField(20);
+		tfHarga     = new  JTextField(20);
+		bTambah     = new JButton("tambah produk");
 
 		//combobox vektor
-		Vector vJenis= new Vector();
-		Vector vSuplier= new Vector();
+		Vector vJenis  = new Vector();
+		Vector vSuplier = new Vector();
 		try{
 			Connection koneksi = DriverManager.getConnection("jdbc:mysql://localhost:3306/p3","root","");
 			Statement stm = koneksi.createStatement();
@@ -117,13 +115,29 @@ public class InputProduk{
 				try{
 					Connection koneksi = DriverManager.getConnection("jdbc:mysql://localhost:3306/p3","root","");
 					Statement stm = koneksi.createStatement();
-					String query="INSERT INTO produk(nama_produk, id_jenis, stok, harga, id_suplier) VALUES ('"+namaProduk+"',"+idJenis+","+stok+","+harga+","+idSuplier+")";
-					int hasil = stm.executeUpdate(query);
-					if(hasil == 0){
-						System.out.println("gagal");
+					
+					//mencari id produk baru
+					int idProduk = 0;
+					String query = "SELECT id_produk FROM  produk ORDER BY  produk.id_produk ASC ";
+					ResultSet rs = stm.executeQuery(query);
+					while(rs.next()){
+						idProduk=rs.getInt("id_produk") + 1;
+					}
+					
+					String queryProduk="INSERT INTO produk(id_produk,nama_produk, id_jenis,harga, id_suplier) VALUES ("+idProduk+",'"+namaProduk+"',"+idJenis+","+harga+","+idSuplier+")";
+					int hasilProduk = stm.executeUpdate(queryProduk);
+					
+					String queryStok = "INSERT INTO stok_produk(id_produk,stok) VALUES ("+idProduk+","+stok+")";
+					int hasilStok = stm.executeUpdate(queryStok);
+					if(hasilStok == 1 && hasilProduk==1){
+						System.out.println("berhasil");	
+						tp.setDataTabel();
+						
+						tfNamaProduk.setText("");
+						tfStok.setText("");				
+						tfHarga.setText("");
 					}else{
-						System.out.println("berhasil");							
-						ob.setDataTabel();
+						System.out.println("gagal");
 					}
 				}catch(SQLException SQLerr){
 					SQLerr.printStackTrace();

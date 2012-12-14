@@ -1,7 +1,5 @@
 package source.produk;
 
-import source.produk.input.InputProduk;
-
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
@@ -12,42 +10,33 @@ import javax.swing.event.*;
 import java.awt.event.*;
 
 public class TabelProduk{
-	private static JTable tabel = new JTable();
+	private final JTable tabel = new JTable();
 	private JTextField tfFilter;
 	private JButton bFilter;
 	private JButton bHapus;
 	
-	private JPanel panelLengkap;
-	private final JPanel panelInput;
 	private JPanel panelUtama;
-	private JPanel panelFilter;
-	private JPanel panelTabel;
+	private JPanel panelFilter;	
 	private JPanel panelButton;
-	private static JScrollPane srcTabel;
+	private JScrollPane srcTabel;	
+	
+	private List<Produk> dataProduk;
 	
 	public TabelProduk(){
 		tfFilter = new JTextField(30);
 		bFilter = new JButton("filter");
 		bHapus= new JButton("hapus");
 		
-		panelLengkap = new JPanel();
-		panelInput = new JPanel(new FlowLayout(FlowLayout.TRAILING));
+		
 		panelUtama=new JPanel(new BorderLayout());
-		panelFilter = new JPanel();
-		panelTabel = new JPanel();
+		panelFilter = new JPanel();		
 		panelButton = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-		
-		//masukkan ke panel lengkap
-		panelLengkap.add(panelUtama);
-		panelLengkap.add(panelInput);
-		
-		//panel input
-		InputProduk inProduk = new InputProduk(this);
-		panelInput.add(inProduk.getPanel());				
-		
 		//panel utama
+		setDataTabel();
+		srcTabel = new JScrollPane(tabel);
+		
 		panelUtama.add(panelFilter,"North");
-		panelUtama.add(panelTabel,"Center");
+		panelUtama.add(srcTabel,"Center");
 		panelUtama.add(panelButton,"South");
 		
 		//filter
@@ -57,19 +46,59 @@ public class TabelProduk{
 		
 		//untuk button
 		panelButton.add(bHapus);
+
+		class HapusListener implements ListSelectionListener,ActionListener{			
+			private int idProduk;
+			
+			public void valueChanged(ListSelectionEvent e){			
+				int baris = tabel.getSelectedRow();
+				
+				if(baris > -1) {
+					Produk p = dataProduk.get(baris);
+					idProduk = p.getIdProduk();
+				}
+			}
+			
+			public void actionPerformed(ActionEvent ev){
+				try{
+					Connection koneksi = DriverManager.getConnection("jdbc:mysql://localhost:3306/p3","root","");
+					Statement stm = koneksi.createStatement();
+					
+					String query="DELETE FROM stok_produk WHERE id_produk="+idProduk;
+					int hasil = stm.executeUpdate(query);
+					
+					if(hasil== 1){
+						System.out.println("berhasil");	
+						query="DELETE FROM produk WHERE id_produk="+idProduk;
+						hasil = stm.executeUpdate(query);
+						if(hasil == 1){
+							System.out.println("berhasil keseluruhan");	
+							setDataTabel();
+						}					
+					}else{
+						System.out.println("gagal");
+					}
+				}catch(SQLException SQLerr){
+					SQLerr.printStackTrace();
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+				System.out.println(idProduk);
+			}			
+		}
 		
+		HapusListener hl= new HapusListener();		
+		tabel.getSelectionModel().addListSelectionListener(hl);
+		bHapus.addActionListener(hl);
 		
-		setDataTabel();
-		srcTabel = new JScrollPane(tabel);
-		panelTabel.add(srcTabel);
 	}
 	
-	public static final void setDataTabel(){
-		List<Produk> dataProduk = new ArrayList<Produk>();
+	public void setDataTabel(){
 		//ambil data dari database untuk tabel
+		dataProduk = new ArrayList<Produk>();
 		try{
 			Connection koneksi= DriverManager.getConnection("jdbc:mysql://localhost:3306/p3","root","");
-			String qry = "SELECT * FROM produk,suplier,jenis WHERE produk.id_jenis = jenis.id_jenis AND produk.id_suplier = suplier.id_suplier";
+			String qry = "SELECT * FROM produk,suplier,jenis,stok_produk WHERE produk.id_jenis = jenis.id_jenis AND produk.id_suplier = suplier.id_suplier AND produk.id_produk=stok_produk.id_produk";
 			Statement stm =koneksi.createStatement();
 			ResultSet rs = stm.executeQuery(qry);
 			while(rs.next()){
@@ -86,10 +115,14 @@ public class TabelProduk{
 			err.printStackTrace();
 		}
 		TableModelProduk model = new TableModelProduk(dataProduk);
-		tabel.setModel(model);
+		tabel.setModel(model);	
 	}
 	
 	public JPanel getPanel(){
-		return panelLengkap;
+		return panelUtama;
+	}	
+	
+	public TabelProduk getObject(){
+		return this;
 	}
 }

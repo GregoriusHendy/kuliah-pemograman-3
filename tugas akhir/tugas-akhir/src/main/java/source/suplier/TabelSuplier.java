@@ -9,10 +9,42 @@ import java.sql.*;
 
 public class TabelSuplier{
 	private JTable tabel = new JTable();
-	private List<Suplier> dataSuplier = new ArrayList<Suplier>();
-	private JPanel panel= new JPanel();
-	
+	private JTextField tfFilter;
+	private JButton bFilter;
+	private JButton bHapus;
+		
+	private JPanel panelUtama;
+	private JPanel panelFilter;	
+	private JPanel panelButton;
+	private JScrollPane srcTabel;
 	public TabelSuplier(){
+		tfFilter   = new JTextField(30);
+		bFilter    = new JButton("filter");
+		bHapus     = new JButton("hapus");
+		
+		panelUtama = new JPanel(new BorderLayout());
+		panelFilter= new JPanel();  
+		panelButton= new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		
+		//data tabel
+		setDataTabel();
+		srcTabel = new JScrollPane(tabel);
+		
+		panelUtama.add(panelFilter,"North");
+		panelUtama.add(srcTabel,"Center");
+		panelUtama.add(panelButton,"South");
+		
+		//filter
+		panelFilter.add(new JLabel("filter : "));
+		panelFilter.add(tfFilter);
+		panelFilter.add(bFilter);
+		
+		//untuk button
+		panelButton.add(bHapus);
+	}
+	
+	public void setDataTabel(){
+		List<Suplier> dataSuplier = new ArrayList<Suplier>();
 		try{
 			Connection koneksi= DriverManager.getConnection("jdbc:mysql://localhost:3306/p3","root","");
 			String qry = "SELECT * FROM suplier";
@@ -33,12 +65,14 @@ public class TabelSuplier{
 		}
 		
 		TableModelSuplier model = new TableModelSuplier(dataSuplier);
-		tabel.setModel(model);
-		JScrollPane srcTabel = new JScrollPane(tabel);
-		panel.add(srcTabel);
+		tabel.setModel(model);		
 	}
 	
 	public JPanel getPanel(){
-		return panel;
+		return panelUtama;
+	}
+	
+	public TabelSuplier getObject(){
+		return this;
 	}
 }
