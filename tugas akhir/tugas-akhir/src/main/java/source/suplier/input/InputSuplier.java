@@ -6,8 +6,9 @@ import java.awt.event.*;
 import java.sql.*;
 import java.util.*;
 import source.suplier.TabelSuplier;
+import source.koneksi.Koneksi;
 
-public class InputSuplier{
+public class InputSuplier extends Koneksi{
 	private final JTextField tfNama,tfEmail,tfTelpon,tfKota;
 	private final JTextArea taAlamat;
 	private JPanel panelUtama;
@@ -34,7 +35,7 @@ public class InputSuplier{
 		gbc.gridheight = 1;
 		gbc.gridy=0;
 		gbc.gridx=0;
-		panelUtama.add(new JLabel("Input Supplier"));
+		panelUtama.add(new JLabel("Input Supplier : "));
 		
 		gbc.gridwidth = 1;
 		gbc.gridy=1;
@@ -87,16 +88,19 @@ public class InputSuplier{
 				String telpon= tfTelpon.getText();
 				String alamat= taAlamat.getText();
 				
-				try{
-					Connection koneksi = DriverManager.getConnection("jdbc:mysql://localhost:3306/p3","root","");
-					Statement stm = koneksi.createStatement();
+				try{					
 					String query="INSERT INTO suplier(nama_suplier, email,telpon,kota,alamat) VALUES ('"+nama+"','"+email+"','"+kota+"','"+telpon+"','"+alamat+"')";
 					int hasil = stm.executeUpdate(query);
 					if(hasil ==1){
-						System.out.println("berhasil");	
 						ob.setDataTabel();
+						tfNama.setText("");
+						tfEmail.setText("");
+						tfKota.setText("");
+						tfTelpon.setText("");
+						taAlamat.setText("");
+						JOptionPane.showMessageDialog(null,"berhasil menambahkan suplier");
 					}else{
-						System.out.println("gagal");
+						JOptionPane.showMessageDialog(null,"gagal");
 					}					
 				}catch(SQLException SQLerr){
 					SQLerr.printStackTrace();
@@ -106,8 +110,7 @@ public class InputSuplier{
 			}
 		}
 		
-		bTambah.addActionListener(new InSupListener());
-		
+		bTambah.addActionListener(new InSupListener());		
 	}
 	
 	public JPanel getPanel(){

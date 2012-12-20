@@ -38,4 +38,32 @@ public class TableModelSuplier extends AbstractTableModel{
 				default: return null;
 		}
 	}
+	
+	public boolean isCellEditable(int row, int col){ 
+		if(col==0){		
+			return false;
+		}else{
+			return true;
+		}
+	}
+	
+	public void setValueAt(Object value, int baris, int kolom) {
+        Suplier s = dataSuplier.get(baris);
+        String isi = (String) value;
+        
+        switch(kolom){            
+			case 1:s.setNamaSuplier(isi);
+				break;
+			case 2:s.setEmail(isi);
+				break;
+			case 3:s.setTelpon(isi);
+				break;
+			case 4:s.setKota(isi);
+				break;
+			case 5:s.setAlamat(isi);
+				break;
+            default: break;
+        }
+        fireTableCellUpdated(baris, kolom);
+    }
 }

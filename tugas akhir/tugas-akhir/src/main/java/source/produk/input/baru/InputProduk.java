@@ -1,51 +1,44 @@
 package source.produk.input.baru;
 
 import source.produk.TabelProduk;
+import source.suplier.TabelSuplier;
+import source.suplier.Suplier;
+import source.jenis.Jenis;
+import source.koneksi.Koneksi;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
 
-public class InputProduk{
+public class InputProduk extends Koneksi{
 	private JPanel panelTambah;
 	private final JTextField tfNamaProduk,tfStok,tfHarga;
 	private final JComboBox cbJenis,cbSuplier;
 	private JButton bTambah;
+	private List<Suplier> dataSuplier;
+	private List<Jenis> dataJenis;
 	
-	public InputProduk(final TabelProduk tp){
+	private TabelProduk tp;
+	private TabelSuplier ts;
+	
+	public InputProduk(final TabelProduk tp,final TabelSuplier ts){
+		this.tp = tp;
+		this.ts = ts;
+		
 		panelTambah = new JPanel();
 		tfNamaProduk= new  JTextField(20);
 		tfStok      = new  JTextField(20);
 		tfHarga     = new  JTextField(20);
 		bTambah     = new JButton("tambah produk");
-
-		//combobox vektor
-		Vector vJenis  = new Vector();
-		Vector vSuplier = new Vector();
-		try{
-			Connection koneksi = DriverManager.getConnection("jdbc:mysql://localhost:3306/p3","root","");
-			Statement stm = koneksi.createStatement();
-			String query="SELECT * FROM jenis";
-			ResultSet rs = stm.executeQuery(query);
-			while(rs.next()){
-				vJenis.add(rs.getInt("id_jenis")-1,rs.getString("nama_jenis"));
-			}
-			
-			query="SELECT * FROM suplier";
-			rs = stm.executeQuery(query);
-			while(rs.next()){
-				vSuplier.add(rs.getInt("id_suplier")-1,rs.getString("nama_suplier"));
-			}
-		}catch(SQLException SQLerr){
-			SQLerr.printStackTrace();
-		}catch(Exception e){
-			e.printStackTrace();
-		}
+		cbJenis     = new  JComboBox();
+		cbSuplier   = new  JComboBox();
 		
-		cbJenis = new  JComboBox(vJenis);
-		cbSuplier = new  JComboBox(vSuplier);
+		setCbSup();
+		setCbJenis();
+		
 		
 		//tampilan tambah data
 		GridBagLayout gBag = new GridBagLayout();
@@ -58,7 +51,7 @@ public class InputProduk{
 		gbc.gridheight = 1;
 		gbc.gridy=0;
 		gbc.gridx=0;
-		panelTambah.add(new JLabel("input produk"),gbc);
+		panelTambah.add(new JLabel("input produk : "),gbc);
 		
 		gbc.gridwidth = 1;
 		gbc.gridy=1;
@@ -109,13 +102,14 @@ public class InputProduk{
 				String namaProduk = tfNamaProduk.getText();
 				Integer stok = Integer.parseInt(tfStok.getText());				
 				Integer harga = Integer.parseInt(tfHarga.getText());
-				int idJenis = cbJenis.getSelectedIndex() + 1;
-				int idSuplier = cbSuplier.getSelectedIndex() + 1;
-					
-				try{
-					Connection koneksi = DriverManager.getConnection("jdbc:mysql://localhost:3306/p3","root","");
-					Statement stm = koneksi.createStatement();
-					
+				
+				Suplier s = (Suplier) cbSuplier.getSelectedItem();
+				int idSuplier = s.getIdSuplier();
+				
+				Jenis j = (Jenis) cbJenis.getSelectedItem();
+				int idJenis = j.getIdJenis();
+				
+				try{									
 					//mencari id produk baru
 					int idProduk = 0;
 					String query = "SELECT id_produk FROM  produk ORDER BY  produk.id_produk ASC ";
@@ -130,14 +124,14 @@ public class InputProduk{
 					String queryStok = "INSERT INTO stok_produk(id_produk,stok) VALUES ("+idProduk+","+stok+")";
 					int hasilStok = stm.executeUpdate(queryStok);
 					if(hasilStok == 1 && hasilProduk==1){
-						System.out.println("berhasil");	
 						tp.setDataTabel();
 						
 						tfNamaProduk.setText("");
 						tfStok.setText("");				
 						tfHarga.setText("");
+						JOptionPane.showMessageDialog(null,"berhasil tambah produk");
 					}else{
-						System.out.println("gagal");
+						JOptionPane.showMessageDialog(null,"input gagal");
 					}
 				}catch(SQLException SQLerr){
 					SQLerr.printStackTrace();
@@ -148,6 +142,18 @@ public class InputProduk{
 		}
 		
 		bTambah.addActionListener(new InputListener());
+	}
+	
+	public void setCbSup(){
+		dataSuplier = ts.getListSuplier();
+		DefaultComboBoxModel modelSup = new DefaultComboBoxModel(dataSuplier.toArray());
+		cbSuplier.setModel(modelSup);
+	}
+	
+	public void setCbJenis(){
+		dataJenis = tp.getListJenis();
+		DefaultComboBoxModel modelJenis = new DefaultComboBoxModel(dataJenis.toArray());
+		cbJenis.setModel(modelJenis);
 	}
 	
 	public JPanel getPanel(){

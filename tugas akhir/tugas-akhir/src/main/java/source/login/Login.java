@@ -1,6 +1,7 @@
 package source.login;
 
 import source.tab.Tab;
+import source.koneksi.Koneksi;
 
 import javax.swing.*;
 import java.awt.*;
@@ -8,7 +9,7 @@ import java.awt.event.*;
 import java.sql.*;
 
 
-public class Login{
+public class Login extends Koneksi{
 	private final JFrame fr;
 	private final JTextField tfUsername;
 	private final JPasswordField pfPass;
@@ -19,8 +20,7 @@ public class Login{
 		private JPanel panelLog;
 	
 	public Login(){
-		fr = new JFrame("login");
-		
+		fr = new JFrame("login");		
 		tfUsername = new JTextField(20);
 		pfPass = new JPasswordField(20);
 		bLogin = new JButton("login");
@@ -72,17 +72,15 @@ public class Login{
 			public void actionPerformed(ActionEvent ev){
 				String username = tfUsername.getText();
 				String pass = pfPass.getText();
-				try{
-					Connection koneksi = DriverManager.getConnection("jdbc:mysql://localhost:3306/p3","root","");
+				try{										
 					String query="SELECT * FROM admin WHERE username='"+username+"' AND password='"+pass+"'";
-					Statement stm = koneksi.createStatement();
 					ResultSet rs = stm.executeQuery(query);
 					if(rs.next()){
 						fr.setVisible(false);
 						Tab t= new Tab();
 						t.setTampil(true);
-					}else{
-						// panelPesan.removeAll();						
+						JOptionPane.showMessageDialog(null,"selamat datang "+username);
+					}else{						
 						lPesan.setText("maaf, kombinasi username dan password salah");
 					}
 				}catch(SQLException SQLerr){

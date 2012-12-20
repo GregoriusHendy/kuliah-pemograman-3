@@ -56,4 +56,8 @@ public class Suplier{
 		return this.alamat;
 	}
 	
+	public String toString(){
+        return this.nama_suplier;
+    }
+	
 }

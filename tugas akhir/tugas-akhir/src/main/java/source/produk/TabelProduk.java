@@ -9,44 +9,52 @@ import java.sql.*;
 import javax.swing.event.*;
 import java.awt.event.*;
 
-public class TabelProduk{
+import source.jenis.Jenis;
+import source.koneksi.Koneksi;
+
+public class TabelProduk extends Koneksi{
 	private final JTable tabel = new JTable();
-	private JTextField tfFilter;
-	private JButton bFilter;
+	// private JTextField tfFilter;
+	// private JButton bFilter;
 	private JButton bHapus;
 	
 	private JPanel panelUtama;
-	private JPanel panelFilter;	
+	// private JPanel panelFilter;	
 	private JPanel panelButton;
 	private JScrollPane srcTabel;	
 	
 	private List<Produk> dataProduk;
+	private TableModelProduk model;
+	private List<Jenis> dataJenis;
 	
 	public TabelProduk(){
-		tfFilter = new JTextField(30);
-		bFilter = new JButton("filter");
+		// tfFilter = new JTextField(30);
+		// bFilter = new JButton("filter");
 		bHapus= new JButton("hapus");
 		
-		
 		panelUtama=new JPanel(new BorderLayout());
-		panelFilter = new JPanel();		
+		// panelFilter = new JPanel();		
 		panelButton = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		
+		//set jenis
+		setJenis();
+		
 		//panel utama
 		setDataTabel();
 		srcTabel = new JScrollPane(tabel);
 		
-		panelUtama.add(panelFilter,"North");
+		// panelUtama.add(panelFilter,"North");
 		panelUtama.add(srcTabel,"Center");
 		panelUtama.add(panelButton,"South");
 		
 		//filter
-		panelFilter.add(new JLabel("filter : "));
-		panelFilter.add(tfFilter);
-		panelFilter.add(bFilter);
+		// panelFilter.add(new JLabel("filter : "));
+		// panelFilter.add(tfFilter);
+		// panelFilter.add(bFilter);
 		
 		//untuk button
 		panelButton.add(bHapus);
-
+		
 		class HapusListener implements ListSelectionListener,ActionListener{			
 			private int idProduk;
 			
@@ -55,51 +63,56 @@ public class TabelProduk{
 				
 				if(baris > -1) {
 					Produk p = dataProduk.get(baris);
-					idProduk = p.getIdProduk();
+					idProduk = p.getIdProduk();					
 				}
 			}
 			
 			public void actionPerformed(ActionEvent ev){
-				try{
-					Connection koneksi = DriverManager.getConnection("jdbc:mysql://localhost:3306/p3","root","");
-					Statement stm = koneksi.createStatement();
-					
+				try{					
+					//stok
 					String query="DELETE FROM stok_produk WHERE id_produk="+idProduk;
-					int hasil = stm.executeUpdate(query);
+					int hasil1 = stm.executeUpdate(query);
 					
-					if(hasil== 1){
-						System.out.println("berhasil");	
-						query="DELETE FROM produk WHERE id_produk="+idProduk;
-						hasil = stm.executeUpdate(query);
-						if(hasil == 1){
-							System.out.println("berhasil keseluruhan");	
-							setDataTabel();
-						}					
+					//pemasukkan
+					query="DELETE FROM pemasukan WHERE id_produk="+idProduk;
+					int hasil2 = stm.executeUpdate(query);
+					
+					//pengeluaran
+					query="DELETE FROM pengeluaran WHERE id_produk="+idProduk;
+					int hasil3 = stm.executeUpdate(query);
+					
+					//produk
+					query="DELETE FROM produk WHERE id_produk="+idProduk;
+					int hasil4 = stm.executeUpdate(query);
+					
+					if(hasil1== 1 || hasil2== 1 || hasil3== 1 && hasil4==1){
+						setDataTabel();			
+						JOptionPane.showMessageDialog(null,"berhasil hapus");
 					}else{
-						System.out.println("gagal");
+						JOptionPane.showMessageDialog(null,"gagal");
 					}
 				}catch(SQLException SQLerr){
 					SQLerr.printStackTrace();
 				}catch(Exception e){
 					e.printStackTrace();
 				}
-				System.out.println(idProduk);
-			}			
+			}		
 		}
 		
 		HapusListener hl= new HapusListener();		
 		tabel.getSelectionModel().addListSelectionListener(hl);
-		bHapus.addActionListener(hl);
-		
+		bHapus.addActionListener(hl);		
 	}
 	
+	//ambil data dari database untuk tabel
 	public void setDataTabel(){
-		//ambil data dari database untuk tabel
+		//combobox jenis		
+		JComboBox cbJenis = new JComboBox();
+		cbJenis.setModel(new DefaultComboBoxModel(dataJenis.toArray()));
+		
 		dataProduk = new ArrayList<Produk>();
-		try{
-			Connection koneksi= DriverManager.getConnection("jdbc:mysql://localhost:3306/p3","root","");
+		try{			
 			String qry = "SELECT * FROM produk,suplier,jenis,stok_produk WHERE produk.id_jenis = jenis.id_jenis AND produk.id_suplier = suplier.id_suplier AND produk.id_produk=stok_produk.id_produk";
-			Statement stm =koneksi.createStatement();
 			ResultSet rs = stm.executeQuery(qry);
 			while(rs.next()){
 				Produk p = new Produk();
@@ -109,13 +122,123 @@ public class TabelProduk{
 				p.setHarga(rs.getInt("harga"));
 				p.setStok(rs.getInt("stok"));
 				p.setNamaSuplier(rs.getString("nama_suplier"));
+				
+				p.setComboJenis(cbJenis);
+				
 				dataProduk.add(p);
 			}
 		}catch(Exception err){
 			err.printStackTrace();
 		}
-		TableModelProduk model = new TableModelProduk(dataProduk);
-		tabel.setModel(model);	
+		
+		model = new TableModelProduk(dataProduk);
+		tabel.setModel(model);
+		tabel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		
+		class EditProdukListener implements TableModelListener{
+			public void tableChanged(TableModelEvent tme){
+				int baris = tme.getFirstRow();
+				int kolom = tme.getColumn();
+				
+				TableModel model = (TableModel)tme.getSource();
+				int id  = (Integer) model.getValueAt(baris,0);
+				
+				String query="";
+				switch(kolom){
+					case 1:						
+						String nama= (String) model.getValueAt(baris,kolom);
+						query="UPDATE produk SET nama_produk='"+nama+"' WHERE id_produk="+id;
+						prosesEdit(query);
+						break;
+					case 2:						
+						String jenis= (String) model.getValueAt(baris,kolom);
+						try{
+							query="select * from jenis where nama_jenis='"+jenis+"'";
+							ResultSet rs = stm.executeQuery(query);
+							if(rs.next()){
+								int idJenis = rs.getInt("id_jenis");
+								query="UPDATE produk SET id_jenis="+idJenis+" WHERE id_produk="+id;
+								prosesEdit(query);
+							}else{
+								setDataTabel();
+								JOptionPane.showMessageDialog(null,"gagal,jenis tidak ada");
+							}
+						}catch(SQLException SQLerr){
+							SQLerr.printStackTrace();
+						}
+						break;
+					case 3:						
+						int stok=(Integer) model.getValueAt(baris,kolom);
+						query="UPDATE `stok_produk` SET stok="+stok+" WHERE id_produk="+id;
+						prosesEdit(query);
+						break;
+					case 4:
+						int harga=(Integer) model.getValueAt(baris,kolom);
+						query="UPDATE produk SET harga="+harga+" WHERE id_produk="+id;
+						prosesEdit(query);
+						break;
+					case 5:
+						String suplier= (String) model.getValueAt(baris,kolom);
+						try{						
+							query="SELECT * FROM suplier WHERE nama_suplier='"+suplier+"'";
+							ResultSet rs = stm.executeQuery(query);
+							if(rs.next()){
+								int idSuplier = rs.getInt("id_suplier");
+								query="UPDATE produk SET id_suplier="+idSuplier+" WHERE id_produk="+id;
+								prosesEdit(query);
+							}else{
+								setDataTabel();
+								JOptionPane.showMessageDialog(null,"gagal,suplier belum terdaftar");
+							}
+						}catch(SQLException SQLerr){
+							SQLerr.printStackTrace();
+						}
+						break;
+					default:break;					
+				}				
+			}
+			
+			private void prosesEdit(String query){
+				try{
+					int hasil = stm.executeUpdate(query);					
+					if(hasil== 1){
+						setDataTabel();
+						JOptionPane.showMessageDialog(null,"edit berhasil");
+					}else{
+						JOptionPane.showMessageDialog(null,"gagal");
+					}
+				}catch(SQLException SQLerr){
+					SQLerr.printStackTrace();
+				}
+			}			
+		}		
+		model.addTableModelListener(new EditProdukListener()); 
+	}
+	
+	public void setJenis(){
+		dataJenis = new ArrayList<Jenis>();
+		try{			
+			String qry = "SELECT * from jenis";
+			ResultSet rs = stm.executeQuery(qry);
+			while(rs.next()){
+				Jenis j = new Jenis();
+				j.setIdJenis(rs.getInt("id_jenis"));
+				j.setNamaJenis(rs.getString("nama_jenis"));			
+				dataJenis.add(j);
+			}
+		}catch(SQLException SQLerr){
+			SQLerr.printStackTrace();
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+	
+	public List<Produk> getListProduk(){
+		return dataProduk;
+	}
+	
+	public List<Jenis> getListJenis(){
+		return dataJenis;
 	}
 	
 	public JPanel getPanel(){
