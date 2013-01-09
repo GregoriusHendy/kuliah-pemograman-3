@@ -19,7 +19,7 @@ public class TextFieldDemo extends JFrame implements DocumentListener{
 	
 	final static Color HILIT_COLOR = Color.LIGHT_GRAY;
 	final static Color ERROR_COLOR = Color.PINK;
-	final static String CANCEL_ACTION = "Cancel-Search";
+	final static String CANCEL_ACTION = "cancel-Search";
 	
 	final Color entryBg;
 	final Highlighter hilit;

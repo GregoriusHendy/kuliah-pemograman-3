@@ -17,5 +17,3 @@ Deliverable
 3. user manual
 	- cara instalasi
 	- cara pakasi semua fitur
-
-
